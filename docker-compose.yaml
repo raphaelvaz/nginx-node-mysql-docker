@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  db:
+    build: 
+      context: .
+      dockerfile: Dockerfile.mysql
+    container_name: db
+    restart: always
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment: 
+      - MYSQL_DATABASE=nodedb
+      - MYSQL_ROOT_PASSWORD=root
+    networks: 
+      - server-network
+  app:
+    build: 
+      context: app
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh
+    hostname: app
+    volumes: 
+      - ./app:/usr/src/app
+    tty: true
+    ports: 
+      - "3000:3000"
+    networks:
+      - server-network
+    depends_on: 
+      - db
+    command: node /usr/src/app/index.js
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.reverseproxy
+    container_name: nginx
+    ports: 
+      - "8080:80"
+    networks: 
+      - server-network
+    depends_on: 
+      - app
+networks:
+  server-network:
+    driver: bridge
