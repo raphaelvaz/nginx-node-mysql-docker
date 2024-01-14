@@ -30,7 +30,7 @@ services:
       - server-network
     depends_on: 
       - db
-    command: node /usr/src/app/index.js
+    command: bash -c "npm install && node /usr/src/app/index.js"
   nginx:
     build:
       context: .
